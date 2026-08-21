@@ -1,0 +1,108 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "zony-app",
+  "version": "0.1.0",
+  "identifier": "com.stano.zony-app",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "zony-app",
+        "width": 800,
+        "height": 600
+      }
+    ],
+    "security": {
+      "csp": {
+        "default-src": "'self'",
+        "script-src": [
+          "'self'",
+          "'unsafe-inline'"
+        ],
+        "style-src": [
+          "'self'",
+          "'unsafe-inline'"
+        ],
+        "connect-src": [
+          "'self'",
+          "ipc:",
+          "http://ipc.localhost",
+          "https://ipc.localhost"
+        ],
+        "img-src": [
+          "'self'",
+          "asset:",
+          "http://asset.localhost",
+          "https://asset.localhost",
+          "data:",
+          "blob:"
+        ],
+        "font-src": [
+          "'self'",
+          "data:"
+        ],
+        "object-src": "'none'",
+        "base-uri": "'none'",
+        "frame-ancestors": "'none'",
+        "form-action": "'self'"
+      },
+      "devCsp": {
+        "default-src": [
+          "'self'",
+          "http:",
+          "https:",
+          "ws:",
+          "wss:",
+          "data:",
+          "blob:",
+          "asset:",
+          "ipc:"
+        ],
+        "script-src": [
+          "'self'",
+          "'unsafe-inline'",
+          "'unsafe-eval'",
+          "http:",
+          "https:",
+          "ws:",
+          "wss:",
+          "data:",
+          "blob:",
+          "asset:",
+          "ipc:"
+        ],
+        "style-src": [
+          "'self'",
+          "'unsafe-inline'",
+          "http:",
+          "https:",
+          "data:",
+          "blob:"
+        ]
+      },
+      "freezePrototype": true,
+      "headers": {
+        "X-Content-Type-Options": "nosniff",
+        "Cross-Origin-Opener-Policy": "same-origin",
+        "Cross-Origin-Resource-Policy": "same-origin",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()"
+      }
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

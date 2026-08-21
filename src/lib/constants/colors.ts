@@ -1,0 +1,41 @@
+export const darkModeColors: Record<string, string> = {
+  '--bg-color': '#242424',
+  '--text-color': '#f6f6f6',
+  '--gray-text': '#cccccc',
+  '--sidebar-bg': 'rgba(128, 128, 128, 0.05)',
+  '--btn-bg': '#3f3f3f',
+  '--btn-hover-bg': '#4f4f4f',
+  '--btn-content-bg': '#333333',
+  '--btn-content-hover-bg': '#424242',
+  '--hr-color': '#4d4d4d',
+  '--divider-color': '#444',
+  '--main-bg': '#2f2f2f',
+  '--main-text': '#f6f6f6',
+  '--border-color': '#444',
+  '--input-bg': '#3c3c3c',
+  '--input-border': '#555555',
+  '--accent-color': '#0e639c',
+  '--accent-hover': '#1177bb',
+  '--accent-outline': '#007acc'
+};
+
+export const lightModeColors: Record<string, string> = {
+  '--bg-color': '#e8e8e8',
+  '--text-color': '#0f0f0f',
+  '--gray-text': '#333333',
+  '--sidebar-bg': '#e0e0e0',
+  '--btn-bg': '#dcdcdc',
+  '--btn-hover-bg': '#cccccc',
+  '--btn-content-bg': '#f0f0f0',
+  '--btn-content-hover-bg': '#e6e6e6',
+  '--hr-color': '#bdbdbd',
+  '--divider-color': '#bdbdbd',
+  '--main-bg': '#f6f6f6',
+  '--main-text': '#0f0f0f',
+  '--border-color': '#cccccc',
+  '--input-bg': '#ffffff',
+  '--input-border': '#cccccc',
+  '--accent-color': '#007acc',
+  '--accent-hover': '#0062a3',
+  '--accent-outline': '#005a9e'
+};

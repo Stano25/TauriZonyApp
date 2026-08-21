@@ -1,0 +1,49 @@
+[package]
+name = "zony-app"
+version = "0.1.0"
+description = "A Tauri App"
+authors = ["you"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "zony_app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri-plugin-dialog = "2"
+dirs = "6.0.0"
+csv = "1.3"
+tokio = "1.49.0"
+regex = "1.12.2"
+umya-spreadsheet = "2.3.3"
+calamine = "0.32.0"
+geo = "0.32.0"
+
+# === OPTIMALIZÁCIA ZOSTAVENIA PRE MAXIMÁLNU RÝCHLOŤ BEHU (RELEASE) A RÝCHLOŤ COMPILOVANIA (DEV) ===
+
+# Profily pre optimalizáciu
+[profile.dev]
+incremental = true # Zrýchli kompiláciu počas vývoja (default býva už zapnutý, len uistenie)
+# voliteľné: opt-level = 1 # Zrýchli chod makier atď za cenu trošku pomalšieho dev buildu
+
+# Profily pre finálny build (cargo build --release / tauri build) 
+# Nasledujúci blok markantne zrýchli chod programu (Rust backendu) a zmenší veľkosť .exe
+[profile.release]
+codegen-units = 1     # Lepšia optimalizácia prechádzaním viacerých súborov (pomalšia kompilácia, oveľa rýchlejší exe kód)
+lto = true            # Link Time Optimization - extrémne zvýši rýchlosť za cenu pomalšieho linkovania pri compile
+opt-level = 3         # Maximálna úroveň optimalizácie rýchlosti kódu
+strip = true          # Odstráni debugg symboly -> menší výsledný binárny súbor
+panic = "abort"       # Odstráni drahé formátovanie stack trace chýb a rovno aplikáciu zhodí. Ušetrí miesto aj overhead.
+debug = false         # Vypne debug info, zmenší výsledný binární soubor
+rpath = false         # Vypne rpath, zmenší výsledný binární soubor
