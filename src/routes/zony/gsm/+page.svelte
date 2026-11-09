@@ -18,11 +18,7 @@
 
 <div class="page-container">
   <header class="page-header">
-    <div>
-      <h1>GSM Zóny</h1>
-      <p class="page-subtitle">Generovanie zón 100x100m z nameraných GSM dát.</p>
-    </div>
-    <span class="page-badge">GSM</span>
+    <h1>GSM Zóny</h1>
   </header>
 
   <div class="page-body">
@@ -53,14 +49,12 @@
     <section class="card">
       <h2 class="card-title">Možnosti</h2>
       <Toggle 
-        label="Iba najlepší operátor:"
-        help="Pre každý štvorec ponechá len operátora s najväčšou silou signálu."
+        label="Najlepší operátor podľa signálu:" 
         bind:checked={appSettings.zony_only_best_operator} 
       />
 
       <Toggle 
         label="Vygenerovať chýbajúcich operátorov:" 
-        help="Nie je dostupné pri zapnutom režime „Iba najlepší operátor“."
         disabled={appSettings.zony_only_best_operator}
         bind:checked={appSettings.generate_missing_operators} 
       />

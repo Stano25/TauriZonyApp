@@ -42,11 +42,7 @@
 
 <div class="page-container">
   <header class="page-header">
-    <div>
-      <h1>Protokol DB</h1>
-      <p class="page-subtitle">Vyplnenie DB protokolu z vygenerovaných zón.</p>
-    </div>
-    <span class="page-badge">DB</span>
+    <h1>Protokol DB</h1>
   </header>
 
   <div class="page-body">

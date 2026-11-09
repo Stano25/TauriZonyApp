@@ -5,11 +5,7 @@
 
 <div class="page-container">
   <header class="page-header">
-    <div>
-      <h1>Nastavenia</h1>
-      <p class="page-subtitle">Globálne nastavenia aplikácie. Sú automaticky ukladané.</p>
-    </div>
-    <span class="page-badge">App</span>
+    <h1>Nastavenia</h1>
   </header>
 
   <div class="page-body">

@@ -42,11 +42,7 @@
 
 <div class="page-container">
   <header class="page-header">
-    <div>
-      <h1>Protokol 5G</h1>
-      <p class="page-subtitle">Vyplnenie protokolu z vygenerovaných zón vrátane 5G.</p>
-    </div>
-    <span class="page-badge">5G</span>
+    <h1>Protokol 5G</h1>
   </header>
 
   <div class="page-body">

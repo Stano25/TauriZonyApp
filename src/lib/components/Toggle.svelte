@@ -1,12 +1,10 @@
 <script lang="ts">
   let {
     label,
-    help = "",
     disabled = false,
     checked = $bindable(false)
   } = $props<{
     label: string;
-    help?: string;
     disabled?: boolean;
     checked?: boolean;
   }>();
@@ -16,9 +14,6 @@
   <label class="toggle-container">
     <span class="label-text">
       {label}
-      {#if help}
-        <span class="label-help">{help}</span>
-      {/if}
     </span>
     <div class="switch">
       <input type="checkbox" bind:checked={checked} {disabled} />
@@ -63,13 +58,6 @@
     font-size: 14px;
     font-weight: 500;
     color: var(--gray-text);
-  }
-
-  .label-help {
-    font-size: 12px;
-    font-weight: 400;
-    color: var(--gray-text);
-    opacity: 0.75;
   }
 
   .switch {

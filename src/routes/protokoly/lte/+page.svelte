@@ -36,11 +36,7 @@
 
 <div class="page-container">
   <header class="page-header">
-    <div>
-      <h1>Protokol LTE</h1>
-      <p class="page-subtitle">Vyplnenie protokolu z vygenerovaných zón.</p>
-    </div>
-    <span class="page-badge">LTE</span>
+    <h1>Protokol LTE</h1>
   </header>
 
   <div class="page-body">

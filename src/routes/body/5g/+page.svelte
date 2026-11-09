@@ -62,11 +62,7 @@
 
 <div class="page-container">
   <header class="page-header">
-    <div>
-      <h1>5G Body</h1>
-      <p class="page-subtitle">Generovanie meracích bodov z 5G dát.</p>
-    </div>
-    <span class="page-badge">5G</span>
+    <h1>5G Body</h1>
   </header>
 
   <div class="page-body">

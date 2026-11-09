@@ -165,8 +165,7 @@
   <aside class="sidebar">
     <div class="sidebar-content">
       <div class="brand">
-        <span class="brand-dot"></span>
-        <h2 class="tools-title">Zóny 100m</h2>
+        <h2 class="tools-title">Zóny App</h2>
       </div>
 
       <div class="menu">
@@ -299,17 +298,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 9px;
     margin-bottom: 26px;
-  }
-
-  .brand-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--accent-color);
-    box-shadow: 0 0 10px var(--accent-color);
-    flex-shrink: 0;
   }
 
   .tools-title {
@@ -469,14 +458,14 @@
   }
 
   .terminal {
-    background-color: #1e1e1e; /* Vždy tmavý */
-    color: #cccccc;
+    background-color: var(--card-bg);
+    color: var(--main-text);
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
     font-family: 'Consolas', 'Courier New', monospace;
     position: relative;
-    border-top: 1px solid var(--border-color); /* Default border */
+    border-top: 1px solid var(--border-color);
   }
 
   .terminal-header {
@@ -485,9 +474,9 @@
     text-transform: uppercase;
     letter-spacing: 1px;
     padding: 0 16px;
-    color: #e7e7e7;
-    background-color: #252526; /* Vždy tmavý hlavičkový pruh */
-    border-bottom: 1px solid #333;
+    color: var(--text-color);
+    background-color: var(--btn-content-bg);
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     justify-content: space-between; /* title vlavo, akcie vpravo */
@@ -508,7 +497,7 @@
   .icon-btn {
     background: transparent;
     border: none;
-    color: #cccccc; /* Pevná šedá farba pre tmavý terminál */
+    color: var(--gray-text);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -519,8 +508,8 @@
   }
 
   .icon-btn:hover {
-    background-color: #3e3e42; /* Odtieň tmavého hoveru */
-    color: #ffffff;
+    background-color: var(--btn-content-hover-bg);
+    color: var(--text-color);
   }
 
   .terminal-content {
@@ -537,18 +526,18 @@
   }
   
   .log.normal {
-    color: #cccccc; /* Štandardný tmavý VS Code text */
+    color: var(--main-text);
   }
   
   .log.success {
-    color: #4CAF50; /* Zelená */
+    color: var(--success-color);
   }
   
   .log.warning {
-    color: #FFC107; /* Oranžová / žltá */
+    color: var(--warning-color);
   }
   
   .log.error {
-    color: #F44336; /* Červená */
+    color: var(--danger-color);
   }
 </style>

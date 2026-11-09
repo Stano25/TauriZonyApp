@@ -60,11 +60,7 @@
 
 <div class="page-container">
   <header class="page-header">
-    <div>
-      <h1>LTE Body</h1>
-      <p class="page-subtitle">Generovanie meracích bodov z LTE dát.</p>
-    </div>
-    <span class="page-badge">LTE</span>
+    <h1>LTE Body</h1>
   </header>
 
   <div class="page-body">

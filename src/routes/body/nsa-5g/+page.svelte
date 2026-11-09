@@ -64,11 +64,7 @@
 
 <div class="page-container">
   <header class="page-header">
-    <div>
-      <h1>NSA 5G Body</h1>
-      <p class="page-subtitle">Generovanie bodov z dvojíc LTE + 5G meraní.</p>
-    </div>
-    <span class="page-badge">NSA 5G</span>
+    <h1>NSA 5G Body</h1>
   </header>
 
   <div class="page-body">

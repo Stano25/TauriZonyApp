@@ -24,11 +24,7 @@
 
 <div class="page-container">
   <header class="page-header">
-    <div>
-      <h1>5G Zóny</h1>
-      <p class="page-subtitle">Generovanie zón 100x100m z nameraných 5G dát.</p>
-    </div>
-    <span class="page-badge">5G</span>
+    <h1>5G Zóny</h1>
   </header>
 
   <div class="page-body">
@@ -70,24 +66,21 @@
     <section class="card">
       <h2 class="card-title">Možnosti</h2>
       <Toggle 
-        label="Iba najlepší operátor:"
-        help="Pre každý štvorec ponechá len jedného operátora. Ak najlepší (podľa RSRP) nemá dosiahnutý minimálny SINR, vyberie sa operátor s najlepším RSRP, ktorý SINR prah spĺňa. Použije sa zvolený SINR stĺpec."
+        label={`Najlepší operátor podľa ${appSettings.fiveg_rsrp}:`} 
         bind:checked={appSettings.zony_only_best_operator} 
       />
 
       {#if appSettings.zony_only_best_operator}
         <div class="threshold-box">
           <TextInput 
-            label="Minimálny SINR pre najlepšieho operátora (dB):" 
+            label={`Minimálny ${appSettings.fiveg_sinr} pre najlepšieho operátora (dB):`} 
             bind:value={appSettings.zony_min_best_sinr} 
           />
-          <p class="threshold-hint">Ak najsilnejší operátor nemá tento SINR (stĺpec {appSettings.fiveg_sinr}), použije sa vyhovujúci operátor s najlepším RSRP.</p>
         </div>
       {/if}
 
       <Toggle 
         label="Vygenerovať chýbajúcich operátorov:" 
-        help="Nie je dostupné pri zapnutom režime „Iba najlepší operátor“."
         disabled={appSettings.zony_only_best_operator}
         bind:checked={appSettings.generate_missing_operators} 
       />
