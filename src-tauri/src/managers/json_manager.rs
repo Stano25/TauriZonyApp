@@ -85,29 +85,6 @@ pub fn try_read_json(folder_name: &str) -> Result<AppSettings, Box<dyn Error>>{
     Ok(config)
 }
 
-pub fn create_blank_json(folder_name: &str) -> Result<(), Box<dyn Error>>{
-    let config_base = dirs::config_dir().ok_or("Failed to find config directory")?;
-    let mut dir_path = PathBuf::from(&config_base);
-    dir_path.push(folder_name);
-
-    // 2. Vytvoríme priečinok (ak neexistuje)
-    fs::create_dir_all(&dir_path)?;
-
-    // 3. Pripravíme cestu k súboru (priečinok + config.json)
-    let file_path = dir_path.join("config.json");
-
-    // 4. Vytvoríme defaultné dáta
-    let default_data = AppSettings::default();
-
-    // 5. Serializujeme dáta do Stringu (pretty = pekne formátovaný JSON)
-    let json_string = serde_json::to_string_pretty(&default_data)?;
-
-    // 6. Zapíšeme do súboru
-    fs::write(file_path, json_string)?;
-
-    Ok(())
-}
-
 pub fn save_json(folder_name: &str, settings: &AppSettings) -> Result<(), Box<dyn Error>>{
     let path = get_config_path(folder_name)?;
 
