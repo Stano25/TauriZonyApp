@@ -1,8 +1,12 @@
 use std::error::Error;
 use std::fs;
 use std::path::PathBuf;
-use std::env;
 use serde::{Deserialize, Serialize};
+
+fn default_is_terminal_open() -> bool { true }
+fn default_fiveg_rsrp() -> String { String::from("SS_PBCH-RSRP") }
+fn default_fiveg_sinr() -> String { String::from("SS_PBCH-SINR") }
+fn default_zony_min_best_sinr() -> String { String::from("0") }
 
 #[derive(Serialize, Deserialize, Clone, Default)]
 #[serde(default)]
@@ -14,14 +18,39 @@ pub struct AppSettings {
     pub protocol_db_path: String,
 
     pub is_dark_mode: bool,
+    #[serde(default = "default_is_terminal_open")]
     pub is_terminal_open: bool,
     pub generate_missing_operators: bool,
     pub use_filter: bool,
     pub use_protocol_points: bool,
     pub create_duplicates: bool,
+
+    // Vybrane 5G stlpce (musia sa tiez ukladat, inak sa po restarte stracia)
+    #[serde(default = "default_fiveg_rsrp")]
+    pub fiveg_rsrp: String,
+    #[serde(default = "default_fiveg_sinr")]
+    pub fiveg_sinr: String,
+
+    // Zony: ponechat iba najlepsieho operatora + minimalny SINR prah + cesty vstup/vystup
+    pub zony_only_best_operator: bool,
+    #[serde(default = "default_zony_min_best_sinr")]
+    pub zony_min_best_sinr: String,
+    pub zony_input_path: String,
+    pub zony_output_path: String,
 }
 
 fn get_config_path(folder_name: &str) -> Result<PathBuf, Box<dyn Error>> {
+    // BEZPEČNOSTNÁ KONTROLA:
+    // Názov priečinka prichádza z webview, takže musíme zablokovať cestové oddelovače
+    // a odkazy na nadradený adresár (ochrana proti path traversal mimo config adresára).
+    if folder_name.is_empty()
+        || folder_name.contains('/')
+        || folder_name.contains('\\')
+        || folder_name.contains("..")
+    {
+        return Err("Neplatný názov priečinka nastavení.".into());
+    }
+
     let config_base = dirs::config_dir().ok_or("Failed to find config directory")?;
     let mut path = config_base;
     path.push(folder_name);

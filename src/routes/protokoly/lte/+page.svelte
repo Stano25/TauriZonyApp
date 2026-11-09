@@ -36,64 +36,63 @@
 
 <div class="page-container">
   <header class="page-header">
-    <h1>Konfigurácia Protokol Modulu (LTE)</h1>
+    <div>
+      <h1>Protokol LTE</h1>
+      <p class="page-subtitle">Vyplnenie protokolu z vygenerovaných zón.</p>
+    </div>
+    <span class="page-badge">LTE</span>
   </header>
 
   <div class="page-body">
-    <FilePicker 
-      label="Súbor protokol:"
-      filterName="XLSX Súbory"
-      extensions={['xlsx']}
-      bind:filePath={protokolPath} 
-    />
-    
-    <FilePicker 
-      label="Súbor GSM zóny:"
-      filterName="CSV Súbory"
-      extensions={['csv']}
-      bind:filePath={firstPath} 
-    />
+    <section class="card">
+      <h2 class="card-title">Súbory</h2>
+      <FilePicker 
+        label="Súbor protokol:"
+        filterName="XLSX Súbory"
+        extensions={['xlsx']}
+        bind:filePath={protokolPath} 
+      />
+      
+      <FilePicker 
+        label="Súbor GSM zóny:"
+        filterName="CSV Súbory"
+        extensions={['csv']}
+        bind:filePath={firstPath} 
+      />
 
-    <FilePicker 
-      label="Súbor LTE zóny:"
-      filterName="CSV Súbory"
-      extensions={['csv']}
-      bind:filePath={secondPath} 
-    />
+      <FilePicker 
+        label="Súbor LTE zóny:"
+        filterName="CSV Súbory"
+        extensions={['csv']}
+        bind:filePath={secondPath} 
+      />
 
-    <FileSaver 
-      label="Uložiť protokol ako:"
-      filterName="Excel súbory"
-      extensions={['xlsx']}
-      bind:savePath={outputPath} 
-    />
+      <FileSaver 
+        label="Uložiť protokol ako:"
+        filterName="Excel súbory"
+        extensions={['xlsx']}
+        bind:savePath={outputPath} 
+      />
+    </section>
 
-    <TextInput label="Meraná obec:" bind:value={measuredCity} placeholder="Mesto/Obec..." />
-    <TextInput label="Hodnota Total Power:" bind:value={totalPower} />
-    
-    <!-- Môžeme ich dať vedľa seba v flex containery, ale kvôli zachovaniu jednoduchosti a dizajnu sú pod sebou, alebo pridám row -->
-    <div class="input-row-multi">
-      <TextInput label="Hodnota SINR:" bind:value={sinr} />
-      <TextInput label="Hodnota RSRP:" bind:value={rsrp} />
-    </div>
-
-    <TextInput label="Korekcia výšky antény:" bind:value={antennaHeight} />
-    <TextInput label="Korekcia vnútorného prostredia:" bind:value={internalEnvironment} />
+    <section class="card">
+      <h2 class="card-title">Parametre merania</h2>
+      <TextInput label="Meraná obec:" bind:value={measuredCity} placeholder="Mesto/Obec..." />
+      <div class="input-row-multi">
+        <TextInput label="Hodnota Total Power:" bind:value={totalPower} />
+      </div>
+      <div class="input-row-multi">
+        <TextInput label="Hodnota SINR:" bind:value={sinr} />
+        <TextInput label="Hodnota RSRP:" bind:value={rsrp} />
+      </div>
+      <div class="input-row-multi">
+        <TextInput label="Korekcia výšky antény:" bind:value={antennaHeight} />
+        <TextInput label="Korekcia vnútorného prostredia:" bind:value={internalEnvironment} />
+      </div>
+    </section>
 
     <button class="generate-btn" onclick={handleGenerate} disabled={appSettings.is_generating}>
-      {appSettings.is_generating ? 'GENERUJE SA...' : 'GENEROVAT'}
+      {appSettings.is_generating ? 'Generuje sa...' : 'Generovať'}
     </button>
   </div>
 </div>
-
-<style>
-  .page-container { padding: 20px; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px; overflow-y: auto; }
-  .page-header h1 { margin: 0; color: var(--text-color);}
-  .page-body { flex: 1; display: flex; flex-direction: column; }
-  
-  .input-row-multi { display: flex; gap: 20px; max-width: 600px;}
-  
-  .generate-btn { padding: 12px 40px; background-color: var(--accent-color); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; width: fit-content; margin-top: 20px; transition: background-color 0.2s; }
-  .generate-btn:hover { background: #1177bb; }
-  .generate-btn:disabled { background-color: var(--input-border); cursor: not-allowed; }
-</style>

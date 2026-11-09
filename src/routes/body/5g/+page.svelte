@@ -62,83 +62,81 @@
 
 <div class="page-container">
   <header class="page-header">
-    <h1>Konfigurácia 5G Body Modulu</h1>
+    <div>
+      <h1>5G Body</h1>
+      <p class="page-subtitle">Generovanie meracích bodov z 5G dát.</p>
+    </div>
+    <span class="page-badge">5G</span>
   </header>
 
   <div class="page-body">
-    <FolderPicker 
-      label="Priečinok filtrov operátorov:"
-      bind:folderPath={filterPath} 
-    />
+    <section class="card">
+      <h2 class="card-title">Vstupné a výstupné súbory</h2>
+      <FolderPicker 
+        label="Priečinok filtrov operátorov:"
+        bind:folderPath={filterPath} 
+      />
 
-    <div class="multiple-files-box">
-      <span class="box-title">5G súbory:</span>
-      <div class="files-list">
-        {#each multiplePaths as path, i}
-          <div class="file-item">
-            <span>{path}</span>
-            <button class="remove-btn" onclick={() => removeFile(i)}>X</button>
-          </div>
-        {/each}
+      <div class="files-box">
+        <span class="files-box-title">5G súbory:</span>
+        <div class="files-list">
+          {#each multiplePaths as path, i}
+            <div class="file-item">
+              <span>{path}</span>
+              <button class="btn btn-danger" onclick={() => removeFile(i)}>X</button>
+            </div>
+          {/each}
+        </div>
+        <button class="add-btn" onclick={addFiles}>+ Pridať súbor</button>
       </div>
-      <button class="add-btn" onclick={addFiles}>+ Pridať súbor</button>
-    </div>
 
-    <FileSaver 
-      label="Uložiť súbor ako:"
-      filterName="CSV súbory"
-      extensions={['csv']}
-      bind:savePath={outputPath} 
-    />
+      <FileSaver 
+        label="Uložiť súbor ako:"
+        filterName="CSV súbory"
+        extensions={['csv']}
+        bind:savePath={outputPath} 
+      />
 
-    <FilePicker 
-      label="Súbor protokol:"
-      filterName="XLSX Súbory"
-      extensions={['xlsx']}
-      bind:filePath={protocolPointsPath} 
-    />
+      <FilePicker 
+        label="Súbor protokol:"
+        filterName="XLSX Súbory"
+        extensions={['xlsx']}
+        bind:filePath={protocolPointsPath} 
+      />
 
-    <FileSaver 
-      label="Uložiť protokol ako:"
-      filterName="Excel súbory"
-      extensions={['xlsx']}
-      bind:savePath={secondOutputPath} 
-    />
+      <FileSaver 
+        label="Uložiť protokol ako:"
+        filterName="Excel súbory"
+        extensions={['xlsx']}
+        bind:savePath={secondOutputPath} 
+      />
+    </section>
 
-    <Dropdown label="RSRP Stlpec (5G):" options={fivegRsrpOptions} bind:value={appSettings.fiveg_rsrp} />
-    <Dropdown label="SINR Stlpec (5G):" options={fivegSinrOptions} bind:value={appSettings.fiveg_sinr} />
+    <section class="card">
+      <h2 class="card-title">5G stĺpce</h2>
+      <Dropdown label="RSRP Stĺpec (5G):" options={fivegRsrpOptions} bind:value={appSettings.fiveg_rsrp} />
+      <Dropdown label="SINR Stĺpec (5G):" options={fivegSinrOptions} bind:value={appSettings.fiveg_sinr} />
+    </section>
 
-    <Toggle label="Vygenerovať chýbajúcich operátorov:" bind:checked={generateMissingOperators} />
-    <Toggle label="Použiť filtrovanie:" bind:checked={useFilter} />
-    <Toggle label="Vytvoriť duplikáty pri filtrovaní:" bind:checked={createDuplicates} />
-    <Toggle label="Vygenerovať protokol:" bind:checked={useProtocolPoints} />
+    <section class="card">
+      <h2 class="card-title">Možnosti</h2>
+      <Toggle label="Vygenerovať chýbajúcich operátorov:" bind:checked={generateMissingOperators} />
+      <Toggle label="Použiť filtrovanie:" bind:checked={useFilter} />
+      <Toggle label="Vytvoriť duplikáty pri filtrovaní:" bind:checked={createDuplicates} />
+      <Toggle label="Vygenerovať protokol:" bind:checked={useProtocolPoints} />
+    </section>
 
-    <TextInput label="Veľkosť bodu (polomer v metoch):" bind:value={maxDistance} />
-    <TextInput label="Nastav minimálny RSRP:" bind:value={thresholdRsrp} />
-    <TextInput label="Nastav minimálny SINR:" bind:value={thresholdSinr} />
+    <section class="card">
+      <h2 class="card-title">Parametre</h2>
+      <TextInput label="Veľkosť bodu (polomer v metoch):" bind:value={maxDistance} />
+      <div class="input-row-multi">
+        <TextInput label="Minimálny RSRP (dB):" bind:value={thresholdRsrp} />
+        <TextInput label="Minimálny SINR (dB):" bind:value={thresholdSinr} />
+      </div>
+    </section>
 
     <button class="generate-btn" onclick={handleGenerate} disabled={appSettings.is_generating}>
-      {appSettings.is_generating ? 'GENERUJE SA...' : 'GENEROVAT'}
+      {appSettings.is_generating ? 'Generuje sa...' : 'Generovať'}
     </button>
   </div>
 </div>
-
-<style>
-  .page-container { padding: 20px; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px; overflow-y: auto; }
-  .page-header h1 { margin: 0; color: var(--text-color);}
-  .page-body { flex: 1; display: flex; flex-direction: column; }
-  
-  .multiple-files-box { border: 1px solid var(--input-border); border-radius: 4px; padding: 16px; margin-bottom: 24px; max-width: 600px; background-color: var(--btn-content-bg); }
-  .box-title { font-size: 16px; font-weight: bold; color: var(--gray-text); display: block; margin-bottom: 12px; }
-  .files-list { max-height: 150px; overflow-y: auto; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
-  .file-item { display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); padding: 8px; border-radius: 4px; font-size: 14px; }
-  .file-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; }
-  .remove-btn { background: #d13438; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; }
-  .remove-btn:hover { background: #e81123; }
-  .add-btn { width: 100%; padding: 8px; background: var(--input-bg); border: 1px solid var(--input-border); color: white; border-radius: 4px; cursor: pointer; }
-  .add-btn:hover { background: #444444; }
-
-  .generate-btn { padding: 12px 40px; background-color: var(--accent-color); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; width: fit-content; margin-top: 20px; transition: background-color 0.2s; }
-  .generate-btn:hover { background: #1177bb; }
-  .generate-btn:disabled { background-color: var(--input-border); cursor: not-allowed; }
-</style>

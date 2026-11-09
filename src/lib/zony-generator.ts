@@ -10,11 +10,24 @@ type RunZonyGenerationArgs = {
   outputPath: string;
   rsrpMode?: string;
   sinrMode?: string;
+  onlyBestOperator: boolean;
+  minBestOperatorSinr: string;
 };
+
+function parseNumberOrThrow(value: string, label: string): number {
+  const normalized = value.replace(',', '.').trim();
+  const parsed = Number(normalized);
+  if (!Number.isFinite(parsed)) {
+    throw new Error(`Neplatna ciselna hodnota pre ${label}: ${value}`);
+  }
+  return parsed;
+}
 
 function getMissingFields(args: RunZonyGenerationArgs): string[] {
   const missing: string[] = [];
   const useFilter = args.dataType !== 'gsm' && appSettings.use_filter;
+  // Prah ma zmysel len ked je zapnuty rezim najlepsieho operatora a sila ma SINR (LTE/5G)
+  const needsSinrThreshold = args.onlyBestOperator && args.dataType !== 'gsm';
 
   if (!appSettings.zone_file_path?.trim()) {
     missing.push('Subor definovanych zon');
@@ -34,6 +47,9 @@ function getMissingFields(args: RunZonyGenerationArgs): string[] {
   if (args.dataType === '5g' && !args.sinrMode?.trim()) {
     missing.push('Vyber SINR stlpca');
   }
+  if (needsSinrThreshold && !args.minBestOperatorSinr?.trim()) {
+    missing.push('Minimalny SINR prah najlepsieho operatora');
+  }
 
   return missing;
 }
@@ -51,19 +67,31 @@ export async function runZonyGeneration(args: RunZonyGenerationArgs) {
     return;
   }
 
-  await clearTerminalLogs();
-  appSettings.is_generating = true;
-  const useFilter = args.dataType !== 'gsm' && appSettings.use_filter;
-
-  await appendTerminalLog(`Spusta sa generovanie dat pre ${args.dataType.toUpperCase()}...`, 'normal');
+  // Prah sa pouziva len pri LTE a 5G (GSM nema SINR)
+  const needsSinrThreshold = args.onlyBestOperator && args.dataType !== 'gsm';
 
   try {
+    const bestSinrThreshold = needsSinrThreshold
+      ? parseNumberOrThrow(args.minBestOperatorSinr, 'minimalny SINR prah')
+      : null;
+
+    await clearTerminalLogs();
+    appSettings.is_generating = true;
+    const useFilter = args.dataType !== 'gsm' && appSettings.use_filter;
+
+    await appendTerminalLog(`Spusta sa generovanie dat pre ${args.dataType.toUpperCase()}...`, 'normal');
+    if (args.onlyBestOperator) {
+      await appendTerminalLog('Rezim: pre kazdu zonu bude ponechany iba najlepsi operator.', 'normal');
+    }
+
     const resultMessage = await invoke<string>('generate_zony_data', {
       dataType: args.dataType,
       gridPath: appSettings.zone_file_path,
       inputPath: args.inputPath,
       outputPath: args.outputPath,
-      generateMissingOperators: appSettings.generate_missing_operators,
+      generateMissingOperators: args.onlyBestOperator ? false : appSettings.generate_missing_operators,
+      onlyBestOperator: args.onlyBestOperator,
+      minBestOperatorSinr: bestSinrThreshold,
       useFilter: useFilter,
       filterPath: useFilter ? appSettings.filter_path || '' : '',
       createDuplicates: useFilter ? appSettings.create_duplicates : false,

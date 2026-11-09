@@ -1,7 +1,6 @@
 pub mod managers;
 
-use serde::{Deserialize, Serialize};
-use tauri::Emitter;
+use serde::Deserialize;
 use std::path::PathBuf;
 use crate::managers::data_manager::{
     create_protocol,
@@ -16,30 +15,11 @@ use crate::managers::data_manager::{
     MobilePathProvider,
 };
 
-#[derive(Clone, Serialize, Deserialize)]
-struct TerminalLog {
-    message: String,
-    log_type: String,
-}
-
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
-
-#[tauri::command]
-fn post_log(app: tauri::AppHandle, log: TerminalLog) -> Result<(), String> {
-    app.emit("terminal-log", log).map_err(|e| e.to_string())
-}
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
-            greet, 
-            post_log,
             managers::json_manager::load_settings,
             managers::json_manager::save_settings,
             generate_zony_data,
@@ -76,6 +56,8 @@ async fn generate_zony_data(
     input_path: String,
     output_path: String,
     generate_missing_operators: bool,
+    only_best_operator: bool,
+    min_best_operator_sinr: Option<f32>,
     use_filter: bool,
     filter_path: String,
     create_duplicates: bool,
@@ -90,6 +72,14 @@ async fn generate_zony_data(
         }
     }
 
+    // Prah SINR pre rezim "iba najlepsieho operatora" ma zmysel len pri LTE a 5G
+    // (GSM nema SINR). Pri 5G sa berie SINR z pouzivatelom zvoleneho stlpca.
+    let best_operator_sinr = if only_best_operator && (data_type == "lte" || data_type == "5g") {
+        min_best_operator_sinr
+    } else {
+        None
+    };
+
     let t_grid = PathBuf::from(grid_path);
     let t_in = PathBuf::from(input_path);
     let t_out = PathBuf::from(output_path);
@@ -97,9 +87,9 @@ async fn generate_zony_data(
 
     tokio::task::spawn_blocking(move || {
         let result = match data_type.as_str() {
-            "gsm" => process_dataset::<GsmRecord>(t_grid, t_in, t_out, generate_missing_operators, use_filter, t_filter, create_duplicates),
-            "lte" => process_dataset::<LteRecord>(t_grid, t_in, t_out, generate_missing_operators, use_filter, t_filter, create_duplicates),
-            "5g" => process_dataset::<FiveGRecord>(t_grid, t_in, t_out, generate_missing_operators, use_filter, t_filter, create_duplicates),
+            "gsm" => process_dataset::<GsmRecord>(t_grid, t_in, t_out, generate_missing_operators, only_best_operator, best_operator_sinr, use_filter, t_filter, create_duplicates),
+            "lte" => process_dataset::<LteRecord>(t_grid, t_in, t_out, generate_missing_operators, only_best_operator, best_operator_sinr, use_filter, t_filter, create_duplicates),
+            "5g" => process_dataset::<FiveGRecord>(t_grid, t_in, t_out, generate_missing_operators, only_best_operator, best_operator_sinr, use_filter, t_filter, create_duplicates),
             _ => Err("Neznamy typ siete".to_string()),
         };
 

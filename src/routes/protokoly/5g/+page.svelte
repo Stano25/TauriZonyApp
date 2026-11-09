@@ -42,73 +42,76 @@
 
 <div class="page-container">
   <header class="page-header">
-    <h1>Konfigurácia Protokol 5G Modulu</h1>
+    <div>
+      <h1>Protokol 5G</h1>
+      <p class="page-subtitle">Vyplnenie protokolu z vygenerovaných zón vrátane 5G.</p>
+    </div>
+    <span class="page-badge">5G</span>
   </header>
 
   <div class="page-body">
-    <FilePicker 
-      label="Súbor protokol:"
-      filterName="XLSX Súbory"
-      extensions={['xlsx']}
-      bind:filePath={protokolPath} 
-    />
-    
-    <FilePicker 
-      label="Súbor GSM zóny:"
-      filterName="CSV Súbory"
-      extensions={['csv']}
-      bind:filePath={firstPath} 
-    />
+    <section class="card">
+      <h2 class="card-title">Súbory</h2>
+      <FilePicker 
+        label="Súbor protokol:"
+        filterName="XLSX Súbory"
+        extensions={['xlsx']}
+        bind:filePath={protokolPath} 
+      />
+      
+      <FilePicker 
+        label="Súbor GSM zóny:"
+        filterName="CSV Súbory"
+        extensions={['csv']}
+        bind:filePath={firstPath} 
+      />
 
-    <FilePicker 
-      label="Súbor LTE zóny:"
-      filterName="CSV Súbory"
-      extensions={['csv']}
-      bind:filePath={secondPath} 
-    />
+      <FilePicker 
+        label="Súbor LTE zóny:"
+        filterName="CSV Súbory"
+        extensions={['csv']}
+        bind:filePath={secondPath} 
+      />
 
-    <FilePicker 
-      label="Súbor 5G zóny:"
-      filterName="CSV Súbory"
-      extensions={['csv']}
-      bind:filePath={thirdPath} 
-    />
+      <FilePicker 
+        label="Súbor 5G zóny:"
+        filterName="CSV Súbory"
+        extensions={['csv']}
+        bind:filePath={thirdPath} 
+      />
 
-    <FileSaver 
-      label="Uložiť protokol ako:"
-      filterName="Excel súbory"
-      extensions={['xlsx']}
-      bind:savePath={outputPath} 
-    />
+      <FileSaver 
+        label="Uložiť protokol ako:"
+        filterName="Excel súbory"
+        extensions={['xlsx']}
+        bind:savePath={outputPath} 
+      />
+    </section>
 
-    <TextInput label="Meraná obec:" bind:value={measuredCity} placeholder="Mesto/Obec..." />
-    <TextInput label="Hodnota Total Power:" bind:value={totalPower} />
-    
-    <div class="input-row-multi">
-      <TextInput label="Hodnota SINR:" bind:value={sinr} />
-      <TextInput label="Hodnota RSRP:" bind:value={rsrp} />
-    </div>
+    <section class="card">
+      <h2 class="card-title">5G stĺpce</h2>
+      <Dropdown label="RSRP Stĺpec (5G):" options={fivegRsrpOptions} bind:value={appSettings.fiveg_rsrp} />
+      <Dropdown label="SINR Stĺpec (5G):" options={fivegSinrOptions} bind:value={appSettings.fiveg_sinr} />
+    </section>
 
-    <Dropdown label="RSRP Stlpec (5G):" options={fivegRsrpOptions} bind:value={appSettings.fiveg_rsrp} />
-    <Dropdown label="SINR Stlpec (5G):" options={fivegSinrOptions} bind:value={appSettings.fiveg_sinr} />
-
-    <TextInput label="Korekcia výšky antény:" bind:value={antennaHeight} />
-    <TextInput label="Korekcia vnútorného prostredia:" bind:value={internalEnvironment} />
+    <section class="card">
+      <h2 class="card-title">Parametre merania</h2>
+      <TextInput label="Meraná obec:" bind:value={measuredCity} placeholder="Mesto/Obec..." />
+      <div class="input-row-multi">
+        <TextInput label="Hodnota Total Power:" bind:value={totalPower} />
+      </div>
+      <div class="input-row-multi">
+        <TextInput label="Hodnota SINR:" bind:value={sinr} />
+        <TextInput label="Hodnota RSRP:" bind:value={rsrp} />
+      </div>
+      <div class="input-row-multi">
+        <TextInput label="Korekcia výšky antény:" bind:value={antennaHeight} />
+        <TextInput label="Korekcia vnútorného prostredia:" bind:value={internalEnvironment} />
+      </div>
+    </section>
 
     <button class="generate-btn" onclick={handleGenerate} disabled={appSettings.is_generating}>
-      {appSettings.is_generating ? 'GENERUJE SA...' : 'GENEROVAT'}
+      {appSettings.is_generating ? 'Generuje sa...' : 'Generovať'}
     </button>
   </div>
 </div>
-
-<style>
-  .page-container { padding: 20px; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px; overflow-y: auto; }
-  .page-header h1 { margin: 0; color: var(--text-color);}
-  .page-body { flex: 1; display: flex; flex-direction: column; }
-  
-  .input-row-multi { display: flex; gap: 20px; max-width: 600px;}
-  
-  .generate-btn { padding: 12px 40px; background-color: var(--accent-color); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; width: fit-content; margin-top: 20px; transition: background-color 0.2s; }
-  .generate-btn:hover { background: #1177bb; }
-  .generate-btn:disabled { background-color: var(--input-border); cursor: not-allowed; }
-</style>
