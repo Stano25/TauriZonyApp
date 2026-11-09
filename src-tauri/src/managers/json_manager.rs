@@ -8,7 +8,37 @@ fn default_fiveg_rsrp() -> String { String::from("SS_PBCH-RSRP") }
 fn default_fiveg_sinr() -> String { String::from("SS_PBCH-SINR") }
 fn default_zony_min_best_sinr() -> String { String::from("0") }
 
-#[derive(Serialize, Deserialize, Clone, Default)]
+// Manuálna implementácia Default – derivovaný Default by uložil prázdne stringy
+// (serde default funkcie platia len pri čítaní JSONu, nie pri tvorbe default štruktúry).
+// Vďaka tomu prvá runtime tvorba config.json obsahuje zmysluplné hodnoty.
+impl Default for AppSettings {
+    fn default() -> Self {
+        Self {
+            zone_file_path: String::new(),
+            filter_path: String::new(),
+            protokol_path: String::new(),
+            protocol_points_path: String::new(),
+            protocol_db_path: String::new(),
+
+            is_dark_mode: false,
+            is_terminal_open: default_is_terminal_open(),
+            generate_missing_operators: false,
+            use_filter: false,
+            use_protocol_points: false,
+            create_duplicates: false,
+
+            fiveg_rsrp: default_fiveg_rsrp(),
+            fiveg_sinr: default_fiveg_sinr(),
+
+            zony_only_best_operator: false,
+            zony_min_best_sinr: default_zony_min_best_sinr(),
+            zony_input_path: String::new(),
+            zony_output_path: String::new(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(default)]
 pub struct AppSettings {
     pub zone_file_path: String,
