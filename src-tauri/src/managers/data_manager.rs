@@ -4,13 +4,14 @@ use std::{
     collections::{HashMap, HashSet},
     error::Error,
     fs::{self, File},
-    io::{BufRead, BufReader, Read, Write},
-    path::PathBuf,
+    io::{self, BufRead, BufReader, Read, Write},
+    path::{Path, PathBuf}, u16,
 };
 use std::hash::{Hash, Hasher};
 use geo::{Point as GeoPoint,Geodesic, Distance};
+use crate::managers::position_manager::lat_to_zone_letter;
 
-use super::position_manager::{to_utm_wgs84, wsg84_utm_to_lat_lon};
+use super::position_manager::{get_zone_from_lon, to_utm_wgs84, wsg84_utm_to_lat_lon};
 use super::excel_manager::{update_excel_cell, get_positions_of_table,get_rows_of_table, fill_row, fill_row_db, update_excel_cell_smart, write_measurements_to_excel, write_measurements_to_excel_mobile};
 
 const CITY_CELL: &str = "Meraná obec:"; // Veľkosť mriežky v metroch
@@ -590,7 +591,7 @@ pub trait RecordFilter: Clone + Sized {
 
     fn create_dummy(&self, mcc: u16, mnc: u16) -> Self;
 
-    fn apply_custom_filter(records: Vec<Self>, _filter_files: Option<Vec<PathBuf>>, _create_duplicates: bool) -> Result<Vec<Self>, Box<dyn Error>> {
+    fn apply_custom_filter(records: Vec<Self>, filter_files: Option<Vec<PathBuf>>, _create_duplicates: bool) -> Result<Vec<Self>, Box<dyn Error>> {
         // Predvolená implementácia (ak by nejaký struct filtre nepotreboval) vráti nezmenené dáta
         Ok(records)
     }
@@ -642,7 +643,11 @@ impl RecordFilter for LteRecord {
 
             let first = &records[0];
             
-            // 1. Fixné hodnoty (mcc, mnc, frequency) sú prebrané z prvého záznamu cez first.clone()
+            // 1. Fixné hodnoty (tie sú rovnaké pre celú skupinu)
+            let fixed_mcc = first.mcc;
+            let fixed_mnc = first.mnc;
+            let fixed_freq = first.frequency;
+
             // 2. Reprezentatívne hodnoty (prvé nenulové)
             let first_date = records.iter().find(|r| !r.date.is_empty()).map(|r| r.date.clone()).unwrap_or_default();
             let first_time = records.iter().find(|r| !r.time.is_empty()).map(|r| r.time.clone()).unwrap_or_default();
@@ -1176,6 +1181,8 @@ pub fn get_grid_map(grid_path: PathBuf) -> Result<(HashMap<(i32, i32), u32>, Has
         grid_map.insert((record.x_utm, record.y_utm), record.id);
         grid_map_info.insert(record.id, record);
     }
+    //println!("Načítaných {} 100m zón do pamäte.", count_loaded);
+    //println!("--------------------------------------------------");
     Ok((grid_map, grid_map_info))
 }
 
@@ -1194,10 +1201,12 @@ where T: DeserializeOwned + RecordValidator,
     
     let mut reader = BufReader::new(std::io::Cursor::new(content.as_bytes()));
     let mut header_line = String::new();
+    let mut found = false;
 
     while reader.read_line(&mut header_line)? > 0 {
         // Hľadáme kľúčové slová
         if header_line.contains("Date") && header_line.contains("Time") && header_line.contains("UTC") {
+            found = true;
             break;
         }
         header_line.clear();
@@ -1221,6 +1230,8 @@ where T: DeserializeOwned + RecordValidator,
         .from_reader(chain);
 
     let mut records = Vec::new();
+    let mut skipped_count = 0;
+    let mut error_count = 0;
     let mut first_error: Option<csv::Error> = None;
 
     for result in csv_rdr.deserialize() {
@@ -1229,9 +1240,12 @@ where T: DeserializeOwned + RecordValidator,
                 let rec: T = record;
                 if rec.is_valid() {
                     records.push(rec);
+                } else {
+                    skipped_count += 1;
                 }
             },
             Err(e) => {
+                error_count += 1;
                 if first_error.is_none() {
                     first_error = Some(e);
                 }
@@ -1491,6 +1505,8 @@ where T: Serialize
     }
 
     wtr.flush()?;
+    // println!("Hotovo! Dáta sú uložené.");
+    // println!("--------------------------------------------------");
     Ok(())
 }
 
@@ -1567,7 +1583,7 @@ where
     result
 }
 
-pub fn process_dataset<T>(grid_path: PathBuf, input: PathBuf, output: PathBuf, generate_missing_operators: bool, only_best_operator: bool, min_best_operator_sinr: Option<f32>, use_filter: bool, filter_path: PathBuf, create_duplicates: bool) -> Result<(), String>
+pub fn process_dataset<T>(grid_path: PathBuf, input: PathBuf, output: PathBuf,generate_missing_operators: bool, only_best_operator: bool, min_best_operator_sinr: Option<f32>, use_filter: bool, filter_path: PathBuf, create_duplicates: bool) -> Result<(), String>
 where T: DeserializeOwned + Serialize + RecordFilter + RecordValidator + Clone,
 {
     let (grid_map, grid_map_info) = get_grid_map(grid_path)
@@ -1632,15 +1648,13 @@ pub fn create_protocol(protocol_path: PathBuf, gsm_path: PathBuf, lte_path: Path
     let gsm_table_rows = get_rows_of_table(&output_path, gsm_table_pos).map_err(|e| format!("Chyba pri získavaní riadkov tabuľky GSM: {}", e))?;
     let (gsm_calculated_data, stats) = calculate_protocol_data::<GsmRecord>(&gsm_records, &gsm_table_rows, antenna_height, internal_environment, total_power, rsrp, sinr, false);
     fill_row(&output_path, gsm_calculated_data).map_err(|e| format!("Chyba pri vyplneni tabulky: {}",e))?;
-    update_excel_cell_smart(&output_path, ZONES_PEOPLE_CELL, stats.as_str(), gsm_table_pos.1)
-        .map_err(|e| format!("Chyba pri aktualizácii Excelu: {}", e))?;
+    let start_hight = if let Some(pos) = update_excel_cell_smart(&output_path, ZONES_PEOPLE_CELL, stats.as_str(),gsm_table_pos.1).map_err(|e| format!("Chyba pri aktualizácii Excelu: {}", e))? {pos+1} else {1};
 
     let lte_table_pos = get_positions_of_table(&output_path, LTE_TABLE_START_CELL).map_err(|e| format!("Chyba pri získavaní pozície tabuľky LTE: {}", e))?;
     let lte_table_rows = get_rows_of_table(&output_path, lte_table_pos).map_err(|e| format!("Chyba pri získavaní riadkov tabuľky LTE: {}", e))?;
     let (lte_calculated_data, stats) = calculate_protocol_data::<LteRecord>(&lte_records, &lte_table_rows, antenna_height, internal_environment, total_power, rsrp, sinr, false);
     fill_row(&output_path, lte_calculated_data).map_err(|e| format!("Chyba pri vyplneni tabulky: {}",e))?;
-    update_excel_cell_smart(&output_path, ZONES_PEOPLE_CELL, stats.as_str(), lte_table_pos.1)
-        .map_err(|e| format!("Chyba pri aktualizácii Excelu: {}", e))?;
+    let start_hight = if let Some(pos) = update_excel_cell_smart(&output_path, ZONES_PEOPLE_CELL, stats.as_str(),lte_table_pos.1).map_err(|e| format!("Chyba pri aktualizácii Excelu: {}", e))? {pos+1} else {1};
 
     let nr_5g_table_pos = get_positions_of_table(&output_path, NR_5G_TABLE_START_CELL).map_err(|e| format!("Chyba pri získavaní pozície tabuľky NR 5G: {}", e))?;
     let nr_5g_table_rows = get_rows_of_table(&output_path, nr_5g_table_pos).map_err(|e| format!("Chyba pri získavaní riadkov tabuľky NR 5G: {}", e))?;
@@ -1650,8 +1664,7 @@ pub fn create_protocol(protocol_path: PathBuf, gsm_path: PathBuf, lte_path: Path
             calculate_protocol_5g_data(&fiveg_records, &lte_records, &nr_5g_table_rows, antenna_height, internal_environment, rsrp, sinr)
         };
     fill_row(&output_path, nr_5g_calculated_data).map_err(|e| format!("Chyba pri vyplneni tabulky: {}",e))?;
-    update_excel_cell_smart(&output_path, ZONES_PEOPLE_CELL, stats.as_str(), nr_5g_table_pos.1)
-        .map_err(|e| format!("Chyba pri aktualizácii Excelu: {}", e))?;
+    let start_hight = if let Some(pos) = update_excel_cell_smart(&output_path, ZONES_PEOPLE_CELL, stats.as_str(),nr_5g_table_pos.1).map_err(|e| format!("Chyba pri aktualizácii Excelu: {}", e))? {pos+1} else {1};
     Ok(())  
 }
 
@@ -1704,26 +1717,36 @@ fn read_record_and_grid<T>(file_path: PathBuf) -> Result<Vec<(T, GridSquare)>, B
     let headers = csv_rdr.headers()?.clone();
 
     let mut data_pairs = Vec::new();
+    let mut skipped_count = 0;
+    let mut error_count = 0;
 
     // 5. Hlavný cyklus
     for result in csv_rdr.records() {
-        let Ok(record) = result else { continue; };
+        match result {
+            Ok(record) => {
+                // Pokus o deserializáciu dát z riadku
+                let record_res: Result<T, _> = record.deserialize(Some(&headers));
+                
+                // Pokus o deserializáciu Grid dát z TOHO ISTÉHO riadku
+                let grid_res: Result<GridSquare, _> = record.deserialize(Some(&headers));
 
-        // Pokus o deserializáciu dát z riadku
-        let record_res: Result<T, _> = record.deserialize(Some(&headers));
-        
-        // Pokus o deserializáciu Grid dát z TOHO ISTÉHO riadku
-        let grid_res: Result<GridSquare, _> = record.deserialize(Some(&headers));
-
-        match (record_res, grid_res) {
-            (Ok(record), Ok(grid)) => {
-                data_pairs.push((record, grid));
+                match (record_res, grid_res) {
+                    (Ok(record), Ok(grid)) => {
+                        data_pairs.push((record, grid));
+                    },
+                    (Err(_), _) | (_, Err(_)) => {
+                        // Ak sa nepodarí načítať buď GSM alebo Grid časť (napr. chýbajúce číslo v povinnom poli)
+                        error_count += 1;
+                    }
+                }
             },
-            // Ak sa nepodarí načítať buď GSM alebo Grid časť
-            // (napr. chýbajúce číslo v povinnom poli), riadok preskočíme
-            _ => (),
+            Err(_) => error_count += 1,
         }
     }
+
+    //println!("Štatistika:");
+    //println!("  Načítané páry: {}", data_pairs.len());
+    //println!("  Chyby formátu: {}", error_count);
 
     Ok(data_pairs)
 }
@@ -2331,7 +2354,7 @@ where T: DeserializeOwned + Serialize + RecordFilter + RecordValidator + Clone +
 
     fs::copy(protocol_path, &second_output).map_err(|e| format!("Chyba pri kopírovaní protokolu: {}", e))?;
 
-    let record_points_vec = get_records_vec(&all_final_records);
+    let mut record_points_vec = get_records_vec(&all_final_records);
 
     write_measurements_to_excel(&second_output, &record_points_vec)
         .map_err(|e| format!("Chyba pri zápise do Excelu: {}", e))?;

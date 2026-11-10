@@ -1,4 +1,4 @@
-use std::{collections::HashMap, path::PathBuf};
+use std::{collections::HashMap, path::{Path, PathBuf}};
 use umya_spreadsheet;
 use calamine::{Reader, Xlsx, open_workbook,Data};
 use crate::managers::data_manager::{RecordPoint, RecordPointMobile};
@@ -78,6 +78,7 @@ pub fn update_excel_cell(file_path: &PathBuf, search_text: &str, new_value: &str
             if found_col >= min_col && found_col <= max_col &&
                found_row >= min_row && found_row <= max_row {
                 
+                //println!("Bunka je súčasťou zlúčenia: {}", range_str);
                 // Posunieme cieľ až za koniec zlúčenia
                 target_col = max_col + 1;
                 break;
