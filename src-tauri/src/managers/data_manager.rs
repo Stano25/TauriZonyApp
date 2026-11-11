@@ -868,6 +868,7 @@ impl RecordValidator for FiveGRecord {
         && self.longitude.is_some() 
         && self.get_active_rsrp().is_some()
         && self.get_active_sinr().is_some()
+        && self.pci.is_some()
     }
 }
 
