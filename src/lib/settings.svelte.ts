@@ -23,6 +23,9 @@ export const appSettings: Record<string, any> = $state({
     // Zóny: iba najlepší operátor + minimálny SINR prah + cesty vstup/výstup
     zony_only_best_operator: false,
     zony_min_best_sinr: "0",
+    // Offsety pripočítané na konci k vypočítanému priemeru RSRP/SINR (zony LTE/5G)
+    zony_rsrp_offset: "0",
+    zony_sinr_offset: "0",
     zony_input_path: "",
     zony_output_path: "",
 

@@ -7,6 +7,8 @@ fn default_is_terminal_open() -> bool { true }
 fn default_fiveg_rsrp() -> String { String::from("SS_PBCH-RSRP") }
 fn default_fiveg_sinr() -> String { String::from("SS_PBCH-SINR") }
 fn default_zony_min_best_sinr() -> String { String::from("0") }
+fn default_zony_rsrp_offset() -> String { String::from("0") }
+fn default_zony_sinr_offset() -> String { String::from("0") }
 
 // Manuálna implementácia Default – derivovaný Default by uložil prázdne stringy
 // (serde default funkcie platia len pri čítaní JSONu, nie pri tvorbe default štruktúry).
@@ -32,6 +34,8 @@ impl Default for AppSettings {
 
             zony_only_best_operator: false,
             zony_min_best_sinr: default_zony_min_best_sinr(),
+            zony_rsrp_offset: default_zony_rsrp_offset(),
+            zony_sinr_offset: default_zony_sinr_offset(),
             zony_input_path: String::new(),
             zony_output_path: String::new(),
         }
@@ -65,6 +69,11 @@ pub struct AppSettings {
     pub zony_only_best_operator: bool,
     #[serde(default = "default_zony_min_best_sinr")]
     pub zony_min_best_sinr: String,
+    // Offsety pripocitavane az na konci k vypocitanemu priemeru RSRP/SINR (zony LTE/5G)
+    #[serde(default = "default_zony_rsrp_offset")]
+    pub zony_rsrp_offset: String,
+    #[serde(default = "default_zony_sinr_offset")]
+    pub zony_sinr_offset: String,
     pub zony_input_path: String,
     pub zony_output_path: String,
 }

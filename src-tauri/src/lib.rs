@@ -62,7 +62,10 @@ async fn generate_zony_data(
     filter_path: String,
     create_duplicates: bool,
     rsrp_mode: Option<String>,
-    sinr_mode: Option<String>
+    sinr_mode: Option<String>,
+    // Offsety pripocitane na konci k vypocitanemu priemeru RSRP/SINR (len zony LTE/5G)
+    rsrp_offset: Option<f64>,
+    sinr_offset: Option<f64>
 ) -> Result<String, String> {
     
     // Nacitame mody pre 5G ak boli odoslane
@@ -87,9 +90,9 @@ async fn generate_zony_data(
 
     tokio::task::spawn_blocking(move || {
         let result = match data_type.as_str() {
-            "gsm" => process_dataset::<GsmRecord>(t_grid, t_in, t_out, generate_missing_operators, only_best_operator, best_operator_sinr, use_filter, t_filter, create_duplicates),
-            "lte" => process_dataset::<LteRecord>(t_grid, t_in, t_out, generate_missing_operators, only_best_operator, best_operator_sinr, use_filter, t_filter, create_duplicates),
-            "5g" => process_dataset::<FiveGRecord>(t_grid, t_in, t_out, generate_missing_operators, only_best_operator, best_operator_sinr, use_filter, t_filter, create_duplicates),
+            "gsm" => process_dataset::<GsmRecord>(t_grid, t_in, t_out, generate_missing_operators, only_best_operator, best_operator_sinr, use_filter, t_filter, create_duplicates, rsrp_offset, sinr_offset),
+            "lte" => process_dataset::<LteRecord>(t_grid, t_in, t_out, generate_missing_operators, only_best_operator, best_operator_sinr, use_filter, t_filter, create_duplicates, rsrp_offset, sinr_offset),
+            "5g" => process_dataset::<FiveGRecord>(t_grid, t_in, t_out, generate_missing_operators, only_best_operator, best_operator_sinr, use_filter, t_filter, create_duplicates, rsrp_offset, sinr_offset),
             _ => Err("Neznamy typ siete".to_string()),
         };
 
