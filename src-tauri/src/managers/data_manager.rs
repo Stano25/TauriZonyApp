@@ -591,6 +591,10 @@ pub trait RecordFilter: Clone + Sized {
 
     fn create_dummy(&self, mcc: u16, mnc: u16) -> Self;
 
+    // Pripocitanie pouzivatelskeho offsetu k vypocitanemu priemeru RSRP/SINR (zony LTE/5G).
+    // Default je no-op (GSM ziadne RSRP/SINR nema).
+    fn apply_offsets(&mut self, _rsrp_offset: Option<f64>, _sinr_offset: Option<f64>) {}
+
     fn apply_custom_filter(records: Vec<Self>, filter_files: Option<Vec<PathBuf>>, _create_duplicates: bool) -> Result<Vec<Self>, Box<dyn Error>> {
         // Predvolená implementácia (ak by nejaký struct filtre nepotreboval) vráti nezmenené dáta
         Ok(records)
@@ -731,6 +735,12 @@ impl RecordFilter for LteRecord {
                 }
             }
         
+    fn apply_offsets(&mut self, rsrp_offset: Option<f64>, sinr_offset: Option<f64>) {
+        // Offset sa len prirata k uz vypocitanemu priemeru, nic ine sa nemeni
+        if let Some(off) = rsrp_offset { self.rsrp = self.rsrp.map(|v| v + off); }
+        if let Some(off) = sinr_offset { self.sinr = self.sinr.map(|v| v + off); }
+    }
+
     fn apply_custom_filter(records: Vec<Self>, filter_files: Option<Vec<PathBuf>>, create_duplicates: bool) -> Result<Vec<Self>, Box<dyn Error>> {
         apply_filter_common(records, filter_files, create_duplicates)
     }
@@ -1064,6 +1074,12 @@ impl RecordFilter for FiveGRecord {
         dummy.set_active_rsrp(Some(-174.0));
         dummy.set_active_sinr(Some(-100.0));
         dummy
+    }
+
+    fn apply_offsets(&mut self, rsrp_offset: Option<f64>, sinr_offset: Option<f64>) {
+        // Offset sa prirata iba k pouzivatelom vybranym 5G stlpcom (aktivny mod)
+        if let Some(off) = rsrp_offset { self.set_active_rsrp(self.get_active_rsrp().map(|v| v + off)); }
+        if let Some(off) = sinr_offset { self.set_active_sinr(self.get_active_sinr().map(|v| v + off)); }
     }
 
     fn apply_custom_filter(records: Vec<Self>, filter_files: Option<Vec<PathBuf>>, create_duplicates: bool) -> Result<Vec<Self>, Box<dyn Error>> {
@@ -1584,7 +1600,29 @@ where
     result
 }
 
-pub fn process_dataset<T>(grid_path: PathBuf, input: PathBuf, output: PathBuf,generate_missing_operators: bool, only_best_operator: bool, min_best_operator_sinr: Option<f32>, use_filter: bool, filter_path: PathBuf, create_duplicates: bool) -> Result<(), String>
+// Pripocita pouzivatelske offsety k vypocitanemu priemeru RSRP/SINR vo vyslednych zaznamoch zon.
+// Volane az na konci (po filtrovani a vybere najlepsieho zaznamu), takze samotny vypocet
+// priemerov ani ziadne porovnavanie/filtrovanie sa nijako nezmeni.
+fn apply_offsets_to_best_records<T>(
+    mut best_records_map: HashMap<(u32, u16, u16), T>,
+    rsrp_offset: Option<f64>,
+    sinr_offset: Option<f64>,
+) -> HashMap<(u32, u16, u16), T>
+where
+    T: RecordFilter,
+{
+    if rsrp_offset.is_none() && sinr_offset.is_none() {
+        return best_records_map;
+    }
+
+    for record in best_records_map.values_mut() {
+        record.apply_offsets(rsrp_offset, sinr_offset);
+    }
+
+    best_records_map
+}
+
+pub fn process_dataset<T>(grid_path: PathBuf, input: PathBuf, output: PathBuf,generate_missing_operators: bool, only_best_operator: bool, min_best_operator_sinr: Option<f32>, use_filter: bool, filter_path: PathBuf, create_duplicates: bool, rsrp_offset: Option<f64>, sinr_offset: Option<f64>) -> Result<(), String>
 where T: DeserializeOwned + Serialize + RecordFilter + RecordValidator + Clone,
 {
     let (grid_map, grid_map_info) = get_grid_map(grid_path)
@@ -1613,6 +1651,8 @@ where T: DeserializeOwned + Serialize + RecordFilter + RecordValidator + Clone,
     } else if generate_missing_operators {
         best_records_map = generate_missing_records(best_records_map);
     }
+
+    let best_records_map = apply_offsets_to_best_records(best_records_map, rsrp_offset, sinr_offset);
 
     save_records_to_csv(output, &best_records_map,grid_map_info)
     .map_err(|e| format!("Chyba pri ukladaní CSV súboru: {}", e))?;

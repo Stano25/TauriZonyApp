@@ -1,0 +1,46 @@
+name: Experimentall Windows build
+
+on:
+  push:
+    tags:
+      - 'experimentall-v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows-exe:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install frontend dependencies
+        run: bun install
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Build Windows exe (Tauri)
+        run: bun run tauri build --no-bundle
+
+      - name: Prepare exe for release
+        shell: pwsh
+        run: Copy-Item src-tauri/target/release/zony-app.exe zony-app-experimentall.exe
+
+      - name: Create GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = $env:GITHUB_REF_NAME
+          $title = "Zony App Experimentall " + ($tag -replace '^experimentall-', '')
+          gh release create $tag zony-app-experimentall.exe --title $title --notes "Experimentalla zostava: k vypocitanemu priemeru RSRP/SINR sa na konci pripocita zadana hodnota (LTE a 5G; pri 5G len vybrane stlpce). GSM bez zmeny." --latest=false

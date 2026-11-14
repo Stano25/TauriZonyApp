@@ -12,10 +12,23 @@ type RunZonyGenerationArgs = {
   sinrMode?: string;
   onlyBestOperator: boolean;
   minBestOperatorSinr: string;
+  rsrpOffset: string;
+  sinrOffset: string;
 };
 
 function parseNumberOrThrow(value: string, label: string): number {
   const normalized = value.replace(',', '.').trim();
+  const parsed = Number(normalized);
+  if (!Number.isFinite(parsed)) {
+    throw new Error(`Neplatna ciselna hodnota pre ${label}: ${value}`);
+  }
+  return parsed;
+}
+
+// Prazdny vstup = ziadny offset (null). Inak musi ist cislo.
+function parseOptionalNumberOrThrow(value: string, label: string): number | null {
+  const normalized = value.replace(',', '.').trim();
+  if (!normalized) return null;
   const parsed = Number(normalized);
   if (!Number.isFinite(parsed)) {
     throw new Error(`Neplatna ciselna hodnota pre ${label}: ${value}`);
@@ -75,6 +88,10 @@ export async function runZonyGeneration(args: RunZonyGenerationArgs) {
       ? parseNumberOrThrow(args.minBestOperatorSinr, 'minimalny SINR prah')
       : null;
 
+    // Offsety sa priratavaju az na konci k vypocitanemu priemeru RSRP/SINR
+    const rsrpOffset = parseOptionalNumberOrThrow(args.rsrpOffset, 'offset RSRP priemeru');
+    const sinrOffset = parseOptionalNumberOrThrow(args.sinrOffset, 'offset SINR priemeru');
+
     await clearTerminalLogs();
     appSettings.is_generating = true;
     const useFilter = args.dataType !== 'gsm' && appSettings.use_filter;
@@ -97,6 +114,8 @@ export async function runZonyGeneration(args: RunZonyGenerationArgs) {
       createDuplicates: useFilter ? appSettings.create_duplicates : false,
       rsrpMode: args.dataType === '5g' ? args.rsrpMode ?? null : null,
       sinrMode: args.dataType === '5g' ? args.sinrMode ?? null : null,
+      rsrpOffset: rsrpOffset,
+      sinrOffset: sinrOffset,
     });
 
     await appendTerminalLog('Data boli uspesne vygenerovane.', 'success');

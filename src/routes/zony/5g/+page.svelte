@@ -18,6 +18,8 @@
       sinrMode: appSettings.fiveg_sinr,
       onlyBestOperator: appSettings.zony_only_best_operator,
       minBestOperatorSinr: appSettings.zony_min_best_sinr,
+      rsrpOffset: appSettings.zony_rsrp_offset,
+      sinrOffset: appSettings.zony_sinr_offset,
     });
   }
 </script>
@@ -78,6 +80,19 @@
           />
         </div>
       {/if}
+
+      <div class="threshold-box">
+        <div class="input-row-multi">
+          <TextInput 
+            label={`Pripočítaná hodnota k ${appSettings.fiveg_rsrp} priemeru (dB):`} 
+            bind:value={appSettings.zony_rsrp_offset} 
+          />
+          <TextInput 
+            label={`Pripočítaná hodnota k ${appSettings.fiveg_sinr} priemeru (dB):`} 
+            bind:value={appSettings.zony_sinr_offset} 
+          />
+        </div>
+      </div>
 
       <Toggle 
         label="Vygenerovať chýbajúcich operátorov:" 

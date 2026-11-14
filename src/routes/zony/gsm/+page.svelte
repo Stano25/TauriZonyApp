@@ -12,6 +12,9 @@
       outputPath: appSettings.zony_output_path,
       onlyBestOperator: appSettings.zony_only_best_operator,
       minBestOperatorSinr: appSettings.zony_min_best_sinr,
+      // GSM nema RSRP/SINR, ziaden offset sa nepouzije
+      rsrpOffset: '',
+      sinrOffset: '',
     });
   }
 </script>
