@@ -19,6 +19,12 @@
   let rsrp = $state("-20.0");
   let antennaHeight = $state("0.0");
   let internalEnvironment = $state("0.0");
+  let fivegMode = $state("nsa");
+
+  const fivegModeOptions = [
+    { value: 'nsa', label: 'NSA' },
+    { value: 'sa', label: 'SA' },
+  ];
 
   async function handleGenerate() {
     await runProtocolGeneration({
@@ -36,6 +42,7 @@
       internalEnvironment,
       rsrpMode: appSettings.fiveg_rsrp,
       sinrMode: appSettings.fiveg_sinr,
+      nsaMode: fivegMode === 'nsa',
     });
   }
 </script>
@@ -81,6 +88,15 @@
         filterName="Excel súbory"
         extensions={['xlsx']}
         bind:savePath={outputPath} 
+      />
+    </section>
+
+    <section class="card">
+      <h2 class="card-title">Režim 5G</h2>
+      <Dropdown
+        label="Režim siete (5G):"
+        options={fivegModeOptions}
+        bind:value={fivegMode}
       />
     </section>
 

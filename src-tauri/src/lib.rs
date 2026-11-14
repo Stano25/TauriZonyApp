@@ -256,6 +256,10 @@ async fn generate_protocol_data(
     let t_lte = PathBuf::from(lte_path);
     let t_out = PathBuf::from(output_path);
 
+    // 5G vyhodnotenie v protokoloch 5g/db: true = NSA (kotva LTE), false = SA (len 5G signal).
+    // Predvolene NSA kvôli spätnej kompatibilite so starším správaním.
+    let nsa = nsa_mode.unwrap_or(true);
+
     tokio::task::spawn_blocking(move || {
         let result = match protocol_type.as_str() {
             "lte" => create_protocol(
@@ -270,6 +274,7 @@ async fn generate_protocol_data(
                 rsrp,
                 antenna_height,
                 internal_environment,
+                nsa,
             ),
             "5g" => {
                 let fiveg = fiveg_path
@@ -287,14 +292,13 @@ async fn generate_protocol_data(
                     rsrp,
                     antenna_height,
                     internal_environment,
+                    nsa,
                 )
             }
             "db" => {
                 let fiveg = fiveg_path
                     .and_then(|p| if p.trim().is_empty() { None } else { Some(PathBuf::from(p)) })
                     .ok_or_else(|| "Pre DB protokol chyba 5G CSV subor.".to_string())?;
-                // Predvolené NSA kvôli spätnej kompatibilite so starším správaním
-                let nsa = nsa_mode.unwrap_or(true);
                 create_protocol_db(
                     t_protocol,
                     t_gsm,

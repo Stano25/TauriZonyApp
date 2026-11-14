@@ -100,10 +100,10 @@ export async function runProtocolGeneration(args: ProtocolGenerationArgs) {
       internalEnvironment,
       rsrpMode: args.protocolType === 'lte' ? null : (selectedRsrpMode ?? null),
       sinrMode: args.protocolType === 'lte' ? null : (selectedSinrMode ?? null),
-      nsaMode: args.protocolType === 'db' ? (args.nsaMode ?? true) : null,
+      nsaMode: (args.protocolType === 'db' || args.protocolType === '5g') ? (args.nsaMode ?? true) : null,
     });
 
-    await appendTerminalLog('Protokol bol uspesne vygenerovany.', 'success');
+    // Úspešnú správu vracia Rust príkaz (výsledok invoke) – loguje sa len raz
     if (resultMessage) {
       await appendTerminalLog(resultMessage, 'success');
     }

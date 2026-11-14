@@ -1660,7 +1660,7 @@ where T: DeserializeOwned + Serialize + RecordFilter + RecordValidator + Clone,
     Ok(())
 }
 
-pub fn create_protocol(protocol_path: PathBuf, gsm_path: PathBuf, lte_path: PathBuf, fiveg_path: Option<PathBuf>, output_path: PathBuf, measured_city: String, total_power: f32, sinr: f32, rsrp: f32, antenna_height: f32, internal_environment: f32) -> Result<(), String> {
+pub fn create_protocol(protocol_path: PathBuf, gsm_path: PathBuf, lte_path: PathBuf, fiveg_path: Option<PathBuf>, output_path: PathBuf, measured_city: String, total_power: f32, sinr: f32, rsrp: f32, antenna_height: f32, internal_environment: f32, nsa_mode: bool) -> Result<(), String> {
     fs::copy(protocol_path, &output_path).map_err(|e| format!("Chyba pri kopírovaní protokolu: {}", e))?;
     
     let gsm_records = read_record_and_grid::<GsmRecord>(gsm_path)
@@ -1702,7 +1702,7 @@ pub fn create_protocol(protocol_path: PathBuf, gsm_path: PathBuf, lte_path: Path
     let (nr_5g_calculated_data, stats) = if !have_5g 
             {calculate_protocol_data::<LteRecord>(&lte_records, &nr_5g_table_rows, antenna_height, internal_environment, total_power, rsrp, sinr, true)}
         else {
-            calculate_protocol_5g_data(&fiveg_records, &lte_records, &nr_5g_table_rows, antenna_height, internal_environment, rsrp, sinr)
+            calculate_protocol_5g_data(&fiveg_records, &lte_records, &nr_5g_table_rows, antenna_height, internal_environment, rsrp, sinr, nsa_mode)
         };
     fill_row(&output_path, nr_5g_calculated_data).map_err(|e| format!("Chyba pri vyplneni tabulky: {}",e))?;
     let start_hight = if let Some(pos) = update_excel_cell_smart(&output_path, ZONES_PEOPLE_CELL, stats.as_str(),nr_5g_table_pos.1).map_err(|e| format!("Chyba pri aktualizácii Excelu: {}", e))? {pos+1} else {1};
@@ -1915,6 +1915,7 @@ fn calculate_protocol_5g_data(
     correction_surauding_value: f32,
     rsrp_value: f32,
     sinr_value: f32,
+    nsa_mode: bool,
 ) -> (HashMap<(u32,u32), Vec<(f32,i32)>>, String)
 {
     let mut result = HashMap::new();
@@ -1922,25 +1923,28 @@ fn calculate_protocol_5g_data(
     let limit_outside = rsrp_value + correction_height_value;
     let limit_inside = rsrp_value + correction_height_value + correction_surauding_value;
 
-    // Z LTE záznamov zistíme, ktoré štvorce majú priaznivé LTE + has_5g_nr_yes
-    // Rozdelené podľa (mcc, mnc), zvlášť pre outside a inside limity
+    // NSA režim: z LTE záznamov zistíme, ktoré štvorce majú priaznivé LTE + has_5g_nr_yes
+    // Rozdelené podľa (mcc, mnc), zvlášť pre outside a inside limity.
+    // SA režim: LTE kotva sa nepoužíva, 5G sa hodnotí len podľa vlastného signálu.
     let mut lte_valid_outside: HashMap<(u16, u16), HashSet<u32>> = HashMap::new();
     let mut lte_valid_inside: HashMap<(u16, u16), HashSet<u32>> = HashMap::new();
 
-    for (record, grid) in lte_records {
-        if has_5g_nr_yes(record.get_5g_nr().as_deref()) {
-            if let (Some(mcc), Some(mnc)) = (record.get_mcc(), record.get_mnc()) {
-                // LTE priaznivé pre outside
-                if record.get_rsrp().unwrap_or(-999.0) as f32 >= limit_outside
-                    && record.get_sinr().unwrap_or(-999.0) as f32 >= sinr_value
-                {
-                    lte_valid_outside.entry((mcc, mnc)).or_insert_with(HashSet::new).insert(grid.id);
-                }
-                // LTE priaznivé pre inside
-                if record.get_rsrp().unwrap_or(-999.0) as f32 >= limit_inside
-                    && record.get_sinr().unwrap_or(-999.0) as f32 >= sinr_value
-                {
-                    lte_valid_inside.entry((mcc, mnc)).or_insert_with(HashSet::new).insert(grid.id);
+    if nsa_mode {
+        for (record, grid) in lte_records {
+            if has_5g_nr_yes(record.get_5g_nr().as_deref()) {
+                if let (Some(mcc), Some(mnc)) = (record.get_mcc(), record.get_mnc()) {
+                    // LTE priaznivé pre outside
+                    if record.get_rsrp().unwrap_or(-999.0) as f32 >= limit_outside
+                        && record.get_sinr().unwrap_or(-999.0) as f32 >= sinr_value
+                    {
+                        lte_valid_outside.entry((mcc, mnc)).or_insert_with(HashSet::new).insert(grid.id);
+                    }
+                    // LTE priaznivé pre inside
+                    if record.get_rsrp().unwrap_or(-999.0) as f32 >= limit_inside
+                        && record.get_sinr().unwrap_or(-999.0) as f32 >= sinr_value
+                    {
+                        lte_valid_inside.entry((mcc, mnc)).or_insert_with(HashSet::new).insert(grid.id);
+                    }
                 }
             }
         }
@@ -1962,15 +1966,15 @@ fn calculate_protocol_5g_data(
 
         all_people_count = all_count_people;
 
-        // 5G štvorec je priaznivý len ak:
+        // NSA: 5G štvorec je priaznivý len ak:
         // 1. 5G samotné je priaznivé (RSRP >= limit, SINR >= threshold)
         // 2. LTE pre ten istý štvorec je priaznivé a má nr_5g = yes
-        // Ak pre 5G štvorec chýba LTE štvorec → automaticky nepriaznivé
+        // SA: stačí, aby podmienky spĺňalo samotné 5G.
         let valid_records_outside = all_records.iter()
             .filter(|(record, grid)| {
                 record.get_rsrp().unwrap() as f32 >= limit_outside
                     && record.get_sinr().unwrap() as f32 >= sinr_value
-                    && lte_valid_outside.get(&(*mcc, *mnc)).map_or(false, |set| set.contains(&grid.id))
+                    && (!nsa_mode || lte_valid_outside.get(&(*mcc, *mnc)).map_or(false, |set| set.contains(&grid.id)))
             })
             .collect::<Vec<&&(FiveGRecord, GridSquare)>>();
         
@@ -1983,7 +1987,7 @@ fn calculate_protocol_5g_data(
             .filter(|(record, grid)| {
                 record.get_rsrp().unwrap() as f32 >= limit_inside
                     && record.get_sinr().unwrap() as f32 >= sinr_value
-                    && lte_valid_inside.get(&(*mcc, *mnc)).map_or(false, |set| set.contains(&grid.id))
+                    && (!nsa_mode || lte_valid_inside.get(&(*mcc, *mnc)).map_or(false, |set| set.contains(&grid.id)))
             })
             .collect::<Vec<&&(FiveGRecord, GridSquare)>>();
 

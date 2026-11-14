@@ -22,8 +22,8 @@
   let fivegMode = $state("nsa");
 
   const fivegModeOptions = [
-    { value: 'nsa', label: 'NSA – 5G musí mať aj pokryté LTE' },
-    { value: 'sa', label: 'SA – hodnotí sa len 5G signál' },
+    { value: 'nsa', label: 'NSA' },
+    { value: 'sa', label: 'SA' },
   ];
 
   async function handleGenerate() {

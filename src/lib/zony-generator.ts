@@ -118,7 +118,7 @@ export async function runZonyGeneration(args: RunZonyGenerationArgs) {
       sinrOffset: sinrOffset,
     });
 
-    await appendTerminalLog('Data boli uspesne vygenerovane.', 'success');
+    // Úspešnú správu vracia Rust príkaz (výsledok invoke) – loguje sa len raz
     if (resultMessage) {
       await appendTerminalLog(resultMessage, 'success');
     }

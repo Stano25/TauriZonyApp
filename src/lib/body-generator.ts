@@ -107,7 +107,7 @@ export async function runBodyGeneration(args: BodyGenerationArgs) {
       sinrMode: args.dataType === '5g' ? appSettings.fiveg_sinr : null,
     });
 
-    await appendTerminalLog('Body boli uspesne vygenerovane.', 'success');
+    // Úspešnú správu vracia Rust príkaz (výsledok invoke) – loguje sa len raz
     if (resultMessage) {
       await appendTerminalLog(resultMessage, 'success');
     }
@@ -169,7 +169,7 @@ export async function runMobileBodyGeneration(args: MobileBodyGenerationArgs) {
       sinrMode: appSettings.fiveg_sinr,
     });
 
-    await appendTerminalLog('NSA 5G body boli uspesne vygenerovane.', 'success');
+    // Úspešnú správu vracia Rust príkaz (výsledok invoke) – loguje sa len raz
     if (resultMessage) {
       await appendTerminalLog(resultMessage, 'success');
     }
