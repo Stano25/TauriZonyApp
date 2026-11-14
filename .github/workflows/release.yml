@@ -6,10 +6,11 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
   build-windows:
-    permissions:
-      contents: write
     runs-on: windows-latest
 
     steps:
@@ -20,28 +21,27 @@ jobs:
         uses: oven-sh/setup-bun@v2
 
       - name: Install frontend dependencies
-        run: bun install
+        run: bun install --frozen-lockfile
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
       - name: Rust cache
-        uses: swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
 
-      - name: Build a vytvorenie release
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tagName: ${{ github.ref_name }}
-          releaseName: 'Zony App ${{ github.ref_name }}'
-          releaseBody: 'Windows build aplikacie Zony App.'
-          releaseDraft: false
-          prerelease: false
+      - name: Build Windows exe (Tauri)
+        run: bun run tauri build --no-bundle
 
-      - name: Upload raw exe do release
-        run: gh release upload ${{ github.ref_name }} target/release/zony-app.exe
+      - name: Prepare exe for release
+        shell: pwsh
+        run: Copy-Item src-tauri/target/release/zony-app.exe zony-app.exe
+
+      - name: Create GitHub release
+        shell: pwsh
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = $env:GITHUB_REF_NAME
+          gh release create $tag zony-app.exe --title "Zony App $tag" --notes "Protokol DB: pridana moznost vyberu rezimu SA / NSA pre vyhodnotenie 5G zon (NSA = povodna kotva LTE, SA = len podla 5G signalu)." --latest=true
