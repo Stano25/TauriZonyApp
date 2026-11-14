@@ -1,0 +1,47 @@
+name: Release Build
+
+# Build pre Windows + vytvorenie GitHub release pri pushnutí tagu (napr. v1.0.3)
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-windows:
+    permissions:
+      contents: write
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install frontend dependencies
+        run: bun install
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Build a vytvorenie release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Zony App ${{ github.ref_name }}'
+          releaseBody: 'Windows build aplikacie Zony App.'
+          releaseDraft: false
+          prerelease: false
+
+      - name: Upload raw exe do release
+        run: gh release upload ${{ github.ref_name }} target/release/zony-app.exe
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
