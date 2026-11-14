@@ -243,6 +243,7 @@ async fn generate_protocol_data(
     internal_environment: f32,
     rsrp_mode: Option<String>,
     sinr_mode: Option<String>,
+    nsa_mode: Option<bool>, // 5G vyhodnotenie v DB protokole: true = NSA (kotva LTE), false = SA (len 5G signál)
 ) -> Result<String, String> {
     if protocol_type == "5g" || protocol_type == "db" {
         let rsrp = rsrp_mode.unwrap_or_else(|| "SS_PBCH-RSRP".to_string());
@@ -292,6 +293,8 @@ async fn generate_protocol_data(
                 let fiveg = fiveg_path
                     .and_then(|p| if p.trim().is_empty() { None } else { Some(PathBuf::from(p)) })
                     .ok_or_else(|| "Pre DB protokol chyba 5G CSV subor.".to_string())?;
+                // Predvolené NSA kvôli spätnej kompatibilite so starším správaním
+                let nsa = nsa_mode.unwrap_or(true);
                 create_protocol_db(
                     t_protocol,
                     t_gsm,
@@ -304,6 +307,7 @@ async fn generate_protocol_data(
                     rsrp,
                     antenna_height,
                     internal_environment,
+                    nsa,
                 )
             }
             _ => Err("Neznamy typ protokolu".to_string()),

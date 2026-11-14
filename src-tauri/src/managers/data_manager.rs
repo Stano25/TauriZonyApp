@@ -2156,6 +2156,7 @@ fn calculate_protocol_db_5g_data(
     correction_environment_value: f32,
     rsrp_value: f32,
     sinr_value: f32,
+    nsa_mode: bool,
 ) -> (HashMap<(u32,u32), Vec<f64>>, String) {
     let mut result = HashMap::new();
 
@@ -2164,17 +2165,20 @@ fn calculate_protocol_db_5g_data(
     let mut all_zones_count = 0;
     let mut all_people_count: i32 = 0;
 
-    // Zistíme, ktoré štvorce sú pokryté LTE (pre každého operátora)
+    // NSA režim: zistíme, ktoré štvorce sú pokryté LTE (pre každého operátora).
+    // SA režim: LTE kotva sa nepoužíva, 5G sa hodnotí len podľa vlastného signálu.
     let mut lte_covered_squares: HashMap<(u16, u16), HashSet<u32>> = HashMap::new();
-    for (record, grid) in lte_records {
-        if let (Some(mcc), Some(mnc)) = (record.get_mcc(), record.get_mnc()) {
-            if record.get_rsrp().unwrap_or(-999.0) as f32 >= limit
-                && record.get_sinr().unwrap_or(-999.0) as f32 >= sinr_value
-                && has_5g_nr_yes(record.get_5g_nr().as_deref())
-            {
-                lte_covered_squares.entry((mcc, mnc))
-                    .or_insert_with(HashSet::new)
-                    .insert(grid.id);
+    if nsa_mode {
+        for (record, grid) in lte_records {
+            if let (Some(mcc), Some(mnc)) = (record.get_mcc(), record.get_mnc()) {
+                if record.get_rsrp().unwrap_or(-999.0) as f32 >= limit
+                    && record.get_sinr().unwrap_or(-999.0) as f32 >= sinr_value
+                    && has_5g_nr_yes(record.get_5g_nr().as_deref())
+                {
+                    lte_covered_squares.entry((mcc, mnc))
+                        .or_insert_with(HashSet::new)
+                        .insert(grid.id);
+                }
             }
         }
     }
@@ -2192,13 +2196,14 @@ fn calculate_protocol_db_5g_data(
             .sum();
         all_people_count = total_people;
 
-        // Štvorec je pokrytý 5G len ak 5G aj LTE spĺňajú podmienky
+        // NSA: štvorec je pokrytý 5G len ak 5G aj LTE spĺňajú podmienky.
+        // SA: stačí, aby podmienky spĺňalo samotné 5G.
         let covered_records: Vec<&&(FiveGRecord, GridSquare)> = all_records.iter()
             .filter(|(record, grid)| {
                 record.get_rsrp().unwrap_or(-999.0) as f32 >= limit
                     && record.get_sinr().unwrap_or(-999.0) as f32 >= sinr_value
-                    && lte_covered_squares.get(&(*mcc, *mnc))
-                        .map_or(false, |set| set.contains(&grid.id))
+                    && (!nsa_mode || lte_covered_squares.get(&(*mcc, *mnc))
+                        .map_or(false, |set| set.contains(&grid.id)))
             })
             .collect();
 
@@ -2243,6 +2248,7 @@ pub fn create_protocol_db(
     rsrp: f32,
     antenna_height: f32,
     internal_environment: f32,
+    nsa_mode: bool,
 ) -> Result<(), String> {
     fs::copy(protocol_path, &output_path)
         .map_err(|e| format!("Chyba pri kopírovaní protokolu: {}", e))?;
@@ -2290,7 +2296,7 @@ pub fn create_protocol_db(
     let nr_5g_table_rows = get_rows_of_table(&output_path, nr_5g_table_pos)
         .map_err(|e| format!("Chyba pri získavaní riadkov tabuľky NR 5G: {}", e))?;
     let (nr_5g_data, stats) = calculate_protocol_db_5g_data(
-        &fiveg_records, &lte_records, &nr_5g_table_rows, antenna_height, internal_environment, rsrp, sinr);
+        &fiveg_records, &lte_records, &nr_5g_table_rows, antenna_height, internal_environment, rsrp, sinr, nsa_mode);
     fill_row_db(&output_path, nr_5g_data)
         .map_err(|e| format!("Chyba pri vyplneni tabulky: {}", e))?;
     let _ = update_excel_cell_smart(&output_path, ZONES_PEOPLE_CELL, stats.as_str(), nr_5g_table_pos.1)

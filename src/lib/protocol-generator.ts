@@ -19,6 +19,8 @@ type ProtocolGenerationArgs = {
   internalEnvironment: string;
   rsrpMode?: string;
   sinrMode?: string;
+  /** true = NSA (5G stvorec musi mat aj pokryte LTE), false = SA (len 5G signal). Iba pre DB protokol. */
+  nsaMode?: boolean;
 };
 
 function parseNumberOrThrow(value: string, label: string): number {
@@ -98,6 +100,7 @@ export async function runProtocolGeneration(args: ProtocolGenerationArgs) {
       internalEnvironment,
       rsrpMode: args.protocolType === 'lte' ? null : (selectedRsrpMode ?? null),
       sinrMode: args.protocolType === 'lte' ? null : (selectedSinrMode ?? null),
+      nsaMode: args.protocolType === 'db' ? (args.nsaMode ?? true) : null,
     });
 
     await appendTerminalLog('Protokol bol uspesne vygenerovany.', 'success');
