@@ -9,6 +9,12 @@
   import { darkModeColors, lightModeColors } from '$lib/constants/colors';
   import '$lib/styles/app.css';
 
+  // Vlastné SVG ikony aplikácie (import raw obsahu, aby fungoval currentColor)
+  import chevronDownIcon from '../assets/icons/chevron-down.svg?raw';
+  import chevronForwardIcon from '../assets/icons/chevron-forward.svg?raw';
+  import closeIconSvg from '../assets/icons/close.svg?raw';
+  import chevronUpIcon from '../assets/icons/chevron-up.svg?raw';
+
   let { children } = $props();
 
   $effect(() => {
@@ -130,33 +136,19 @@
 
 {#snippet dropdownIcon(isOpen: boolean)}
   <span style="display: flex; align-items: center; justify-content: center;">
-    <svg width="1.2em" height="1.2em" viewBox="0 0 512 512" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="48">
-      {#if isOpen}
-        <!-- caret-down / chevron-down -->
-        <path d="M112 184l144 144 144-144"/>
-      {:else}
-        <!-- caret-forward / chevron-forward -->
-        <path d="M184 112l144 144-144 144"/>
-      {/if}
-    </svg>
+    {@html isOpen ? chevronDownIcon : chevronForwardIcon}
   </span>
 {/snippet}
 
 {#snippet closeIcon()}
   <span style="display: flex; align-items: center; justify-content: center;">
-    <svg width="1.2em" height="1.2em" viewBox="0 0 512 512" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="48">
-      <!-- close / cross -->
-      <path d="M368 368L144 144M368 144L144 368"/>
-    </svg>
+    {@html closeIconSvg}
   </span>
 {/snippet}
 
 {#snippet terminalIcon()}
   <span style="display: flex; align-items: center; justify-content: center;">
-    <svg width="1.2em" height="1.2em" viewBox="0 0 512 512" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="48">
-      <!-- chevron up (for reopening) -->
-      <path d="M112 328l144-144 144 144"/>
-    </svg>
+    {@html chevronUpIcon}
   </span>
 {/snippet}
 

@@ -1,16 +1,11 @@
 [package]
 name = "zony-app"
-version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+version = "1.0.5"
+description = "Analýza mobilného pokrytia – generovanie zón, bodov a protokolov z CSV meraní (GSM/LTE/5G)"
+authors = ["Stanislav Vysočan"]
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [lib]
-# The `_lib` suffix may seem redundant but it is necessary
-# to make the lib name unique and wouldn't conflict with the bin name.
-# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
 name = "zony_app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
@@ -30,20 +25,16 @@ umya-spreadsheet = "2.3.3"
 calamine = "0.38.0"
 geo = "0.32.0"
 
-# === OPTIMALIZÁCIA ZOSTAVENIA PRE MAXIMÁLNU RÝCHLOŤ BEHU (RELEASE) A RÝCHLOŤ COMPILOVANIA (DEV) ===
-
-# Profily pre optimalizáciu
-[profile.dev]
-incremental = true # Zrýchli kompiláciu počas vývoja (default býva už zapnutý, len uistenie)
-# voliteľné: opt-level = 1 # Zrýchli chod makier atď za cenu trošku pomalšieho dev buildu
-
-# Profily pre finálny build (cargo build --release / tauri build) 
-# Nasledujúci blok markantne zrýchli chod programu (Rust backendu) a zmenší veľkosť .exe
+# Profil pre finálny build: maximálna rýchlosť behu + menšia binárka
 [profile.release]
-codegen-units = 1     # Lepšia optimalizácia prechádzaním viacerých súborov (pomalšia kompilácia, oveľa rýchlejší exe kód)
-lto = true            # Link Time Optimization - extrémne zvýši rýchlosť za cenu pomalšieho linkovania pri compile
-opt-level = 3         # Maximálna úroveň optimalizácie rýchlosti kódu
-strip = true          # Odstráni debugg symboly -> menší výsledný binárny súbor
-panic = "abort"       # Odstráni drahé formátovanie stack trace chýb a rovno aplikáciu zhodí. Ušetrí miesto aj overhead.
-debug = false         # Vypne debug info, zmenší výsledný binární soubor
-rpath = false         # Vypne rpath, zmenší výsledný binární soubor
+codegen-units = 1   # jedna optimalizačná jednotka – lepší prierez optimalizácie
+lto = true          # Link Time Optimization – výrazne rýchlejší kód, pomalšie linkovanie
+opt-level = 3       # maximálna optimalizácia rýchlosti
+strip = true        # odstránenie debug symbolov – menšia binárka
+panic = "abort"     # odstránenie unwind pri panike – menší a rýchlejší kód
+debug = false       # bez debug informácií – menšia binárka
+rpath = false       # bez rpath – menšia binárka
+
+# Profil pre vývoj: rýchla opakovaná kompilácia
+[profile.dev]
+incremental = true

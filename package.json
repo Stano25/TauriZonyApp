@@ -1,7 +1,7 @@
 {
   "name": "zony-app",
-  "version": "0.1.0",
-  "description": "",
+  "version": "1.0.5",
+  "description": "Analýza mobilného pokrytia – generovanie zón, bodov a protokolov z CSV meraní (GSM/LTE/5G)",
   "type": "module",
   "scripts": {
     "dev": "vite dev",
