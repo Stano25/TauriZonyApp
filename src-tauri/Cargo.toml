@@ -1,8 +1,8 @@
 [package]
 name = "zony-app"
-version = "1.0.5"
+version = "1.0.4"
 description = "Analýza mobilného pokrytia – generovanie zón, bodov a protokolov z CSV meraní (GSM/LTE/5G)"
-authors = ["Stanislav Vysočan"]
+authors = ["Stanislav Vysocan"]
 edition = "2021"
 
 [lib]
